@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  
+  <title>Sign Up</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <style>
+   body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-container {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+input {
+  width: 250px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive styles for screens up to 600px */
+@media only screen and (max-width: 600px) {
+  /* Adjust styles for smaller screens */
+  body {
+    font-size: 14px;
+  }
+
+  /* Add more responsive styles as needed */
+}
+
+/* Responsive styles for screens between 600px and 1200px */
+@media only screen and (min-width: 601px) and (max-width: 1200px) {
+  /* Adjust styles for medium-sized screens */
+}
+
+/* Responsive styles for screens above 1200px */
+@media only screen and (min-width: 1201px) {
+  /* Adjust styles for larger screens */
+}
+
+
+  </style>
+</head>
+
+<body>
+  <div class="signup-container">
+    <h2>Sign Up</h2>
+    <form id="signupForm"  action="/signup" method="POST" enctype="application/x-www-form-urlencoded">
+     <label for="name">Names:  </label>
+      <input type="text" id="name" name="name" placeholder="Name">
+	   <label for="address">Address:  </label>
+      <input type="text" id="address" name="address" placeholder="Address">
+	   <label for="phone">Telephone:  </label>
+      <input type="tel" id="telephone" name="telephone" placeholder="Telephone">
+	   <label for="mail">Email:  </label>
+      <input type="email" id="email" name="email" placeholder="Email">
+	   <label for="uname">Username:  </label>
+      <input type="text" id="username" name="username" placeholder="Username">
+	   <label for="pass">Password:  </label>
+      <input type="password" id="password" name="password" placeholder="Password">
+    
+      <button type="submit" onclick="submitSignupForm()" >Sign Up</button>
+    </form>
+  </div>
+  <script src="server.js"></script>
+  <script>
+   function submitSignupForm() {
+  const form = document.getElementById("signupForm");
+  const formData = new FormData(form);
+
+  fetch('/signup', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.message === 'Signup successful') {
+      // Show pop-up message
+      alert('Signup successful!');
+
+      // Redirect to login form (you can modify this URL)
+      window.location.href = '/login';
+    } else {
+      // Handle other cases if needed
+      console.log('Signup response:', data);
+    }
+  })
+  .catch(error => {
+    console.error('Error during signup:', error);
+  });
+}
+
+
+  </script>
+</body>
+
+</html>
+

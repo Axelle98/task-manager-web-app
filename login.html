@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <style>
+  /* Your existing styles */
+
+/* Responsive styles for screens up to 600px */
+@media only screen and (max-width: 600px) {
+  /* Adjust styles for smaller screens */
+  body {
+    font-size: 14px;
+  }
+
+  /* Add more responsive styles as needed */
+}
+
+/* Responsive styles for screens between 600px and 1200px */
+@media only screen and (min-width: 601px) and (max-width: 1200px) {
+  /* Adjust styles for medium-sized screens */
+}
+
+/* Responsive styles for screens above 1200px */
+@media only screen and (min-width: 1201px) {
+  /* Adjust styles for larger screens */
+}
+
+  body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-container {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+input {
+  width: 250px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <h2>Login</h2>
+    <form id="loginForm" method="post" ACTION="/login">
+      <label for="login-username">Username: </label>
+      <input type="text" id="login-username" name="username" placeholder="Username" required>
+      <label for="login-password">Password: </label>
+      <input type="password" id="login-password" name="password" placeholder="Password" required>
+      <label for="signup">Don't have an account? Click on the link below</label>
+      <br>
+      <a href="signup.html">Sign up here!</a>
+      <br>
+      <button type="submit"  onclick="log()">Login</button>
+    </form>
+  </div>
+  <div id="flash-messages">
+  <!-- Flash messages will be inserted here -->
+
+</div>
+   <script scr="server.js"> </script>
+  <script >
+     function log() {
+	  const form = document.getElementById("loginForm");
+  const formData = new FormData(form);
+	 
+// Example using fetch API
+fetch('/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    // your login credentials
+  }),
+})
+  .then(response => response.json())
+  .then(data => {
+    // Handle success (data contains the response from the server)
+    console.log('Login success:', data);
+	 window.location.href = '/form-task.html';
+  })
+  .catch(error => {
+    // Handle error
+    console.error('Login error:', error);
+  });
+  }
+
+  </script>
+</body>
+
+</html>
