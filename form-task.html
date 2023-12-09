@@ -146,9 +146,9 @@ button:hover {
 	<form id="delete" method="post" action="/delete">  <button type="submit">Delete Task</button>  </form><br>
 	<form id="update" method="post" action="/update"> <button type="submit">Update Task</button>  </form><br>
 	<form id="view" method="post" action="/view"> 	  <button type="submit">View Tasks</button> </form><br>
-	<form id="logout" method="post" action="/logout">
+	<form id="logoutForm" method="post" action="/logout">
 		
-	   <button type="submit">LOGOUT</button>
+	   <button type="submit" onclick="logout()">LOGOUT</button>
 	</form>
   </div>
  
@@ -179,6 +179,11 @@ button:hover {
         console.error('Error adding task:', error);
       });
   }
+	   function logout() {
+      // Submit the logout form when the button is clicked
+      document.getElementById('logoutForm').submit();
+    }
+
 </script>
 
 
