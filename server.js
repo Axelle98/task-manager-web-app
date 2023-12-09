@@ -11,17 +11,22 @@ const LocalStrategy = require('passport-local').Strategy;
 const { getUserByUsername, getUserById, comparePassword } = require('./db');
 const mongoose = require('mongoose');
 
-// Connect to MongoDB
+
+
 connect();
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files from the 'task-manager-app' directory
 app.use(express.static(path.join(__dirname, 'task-manager-app')));
 
 // Passport config
-require('./passport-config')(passport);
+require('./passport-config');
 
 // Express session
 app.use(session({ secret: 'secret', resave: true, saveUninitialized: true }));
+
 
 // Express flash
 app.use(flash());
@@ -30,21 +35,45 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-// MongoDB connection
 mongoose.connect('mongodb+srv://root:michou23@axelle.oyjh0mp.mongodb.net/?retryWrites=true&w=majority', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  useNewUrlParser: true, // This is no longer necessary, but it won't harm to leave it
+  useUnifiedTopology: true, // This is no longer necessary, but it won't harm to leave it
 });
 
-const db = mongoose.connection;
 
-// Handle MongoDB connection errors
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.once('open', () => {
-  console.log('Connected to MongoDB');
-});
+module.exports = function (passport) {
+  passport.use(
+    new LocalStrategy((username, password, done) => {
+		    console.log('Attempting authentication...');
+      getUserByUsername(username, (err, user) => {
+        if (err) throw err;
+        if (!user) {
+          return done(null, false, { message: 'Invalid username' });
+        }
 
-// Passport configuration moved to passport-config.js
+        comparePassword(password, user.password, (err, isMatch) => {
+          if (err) throw err;
+          if (isMatch) {
+            return done(null, user);
+          } else {
+            return done(null, false, { message: 'Invalid password' });
+          }
+        });
+      });
+    })
+  );
+
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser((id, done) => {
+    getUserById(id, (err, user) => {
+      done(err, user);
+    });
+  });
+};
+
 
 // Middleware to check if the user is authenticated
 function isAuthenticated(req, res, next) {
@@ -54,10 +83,21 @@ function isAuthenticated(req, res, next) {
   res.redirect('/login');
 }
 
-// Login route
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
+app.get('/', (req, res) => {
+  if (req.isAuthenticated()) {
+    // If the user is authenticated, show the dashboard
+    res.send(`Welcome, ${req.user.username}! This is your dashboard.`);
+  } else {
+    // If the user is not authenticated, redirect to the login page
+    res.sendFile(path.join(__dirname, 'login.html'));
+  }
 });
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'form-task.html'));
+
+});
+
 
 app.post('/login',
   (req, res, next) => {
@@ -71,7 +111,7 @@ app.post('/login',
   })
 );
 
-// Signup route
+
 app.get('/signup.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'signup.html'));
 });
@@ -87,29 +127,59 @@ app.post('/signup', async (req, res) => {
     // Check if the user already exists
     const existingUser = await usersCollection.findOne({ username });
     if (existingUser) {
-      return res.send('User already exists');
+      return res.status(400).json({ error: 'User already exists' });
     }
 
     // Create a new user
     const newUser = { name, address, telephone, email, username, password };
     await usersCollection.insertOne(newUser);
 
-    // Send success response and redirect
-    res.send('Signup successful! Please login...').redirect('/login');
+    // Send success response
+    res.json({ message: 'Signup successful! Please login...' });
   } catch (error) {
     console.error('Error during signup:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+app.use((req, res, next) => {
+  // Check for middleware affecting the request method
+  if (req.method === 'POST' && req.originalMethod === 'GET') {
+    req.method = 'GET';
+  }
+  next();
+});
+
+app.get('/form-task', isAuthenticated, (req, res) => {
+  res.send(`Welcome, ${req.users.username}! This is your dashboard.`);  
+});
+
+// ... to add tasks
+
+app.post('/form-task', isAuthenticated, async (req, res) => {
+  const db = getDatabase();
+  const tasksCollection = db.collection('tasks');
+
+  // Extract task details from the request body
+  const { taskName, status, priority, startDate, deadline, teamMembers, completionPercentage, notes, category } = req.body;
+
+  try {
+    // Create a new task
+    const newTask = {
+      taskName, status, priority, startDate, deadline, teamMembers, completionPercentage, notes,
+      userId: req.user._id // Associate the task with the logged-in user
+    };
+
+    await tasksCollection.insertOne(newTask);
+    res.status(200).json({ message: 'Task added successfully' });
+  } catch (error) {
+    console.error('Error adding task:', error);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// Form-task route
-app.get('/form-task', isAuthenticated, (req, res) => {
-  res.send(`Welcome, ${req.users.username}! This is your dashboard.`);
-});
-
-// Task routes (POST, GET, PUT, DELETE)
-
-// View route
+// This route will handle both GET and POST requests to /tasks
 app.route('/view')
   .get(isAuthenticated, async (req, res) => {
     try {
@@ -127,11 +197,18 @@ app.route('/view')
     }
   })
   .post(isAuthenticated, (req, res) => {
-    // Handle POST logic here
+    // Additional logic for handling POST requests, if needed
+
+    // For example, you might want to update a task
+    // const taskId = req.body.taskId;
+    // const updatedTaskData = req.body.updatedTaskData;
+    // await tasksCollection.updateOne({ _id: taskId, userId: req.user._id }, { $set: updatedTaskData });
+
+    // Respond with success message or updated task data
     res.json({ message: 'Success' });
   });
 
-// Update task route
+
 app.put('/update-task/:taskId', isAuthenticated, async (req, res) => {
   const db = getDatabase();
   const tasksCollection = db.collection('tasks');
@@ -157,7 +234,6 @@ app.put('/update-task/:taskId', isAuthenticated, async (req, res) => {
   }
 });
 
-// Delete task route
 app.delete('/delete-task/:taskId', isAuthenticated, async (req, res) => {
   const db = getDatabase();
   const tasksCollection = db.collection('tasks');
@@ -172,11 +248,9 @@ app.delete('/delete-task/:taskId', isAuthenticated, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
-// Logout route
 app.post('/logout', (req, res) => {
   // Call req.logout with a callback function
-  req.logout((err) => {
+  req.logout(err => {
     if (err) {
       console.error('Error during logout:', err);
       return res.status(500).send('Internal Server Error');
@@ -187,7 +261,8 @@ app.post('/logout', (req, res) => {
   });
 });
 
-// Server listening on port 8080
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
