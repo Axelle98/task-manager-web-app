@@ -245,12 +245,18 @@ app.delete('/delete-task/:taskId', isAuthenticated, async (req, res) => {
   }
 });
 app.post('/logout', (req, res) => {
-  // Passport's logout method will clear the login session
-  req.logout();
- 
-  // Redirect to a login page or send a response as needed
-  res.redirect('/login');
+  // Call req.logout with a callback function
+  req.logout((err) => {
+    if (err) {
+      console.error('Error during logout:', err);
+      return res.status(500).send('Internal Server Error');
+    }
+    
+    // Redirect the user to the login page after successful logout
+    res.redirect('/login');
+  });
 });
+;
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
